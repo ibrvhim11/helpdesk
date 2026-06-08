@@ -1,4 +1,3 @@
-<!-- connection a helppeDesk database avec PDO -->
 <?php
 $servername = "localhost";
 $dbname = "helpdesk";

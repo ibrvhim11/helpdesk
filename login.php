@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if(password_verify($mot_de_passe, $user['mot_de_passe'])) {
 
             $_SESSION['user'] = [
-                'id' => $user['id_user'],
+                'id_user' => $user['id_user'],
                 'nom' => $user['nom'],
                 'role' => $user['role']  
             ];
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif($user['role'] == 'SUPPORT_N1' || $user['role'] == 'SUPPORT_N2') {
                  header("Location: support/dashboard.php");
             } elseif($user['role'] == 'UTILISATEUR') {
-                    header("Location:dashboard.php");
+                    header("Location:users/dashboard.php");
             } elseif($user['role'] == 'SUPERVISEUR'){
                     header("Location: superviseur/dashboard.php");
             }
@@ -60,10 +60,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <style>
         /* un style attrayante pour la page de connexion de Helpdesk, avec une mise en page centrée, des couleurs apaisantes (blanc et marron) */
         body {
-            background-color: #f5f5f5;
+           
             font-family: Arial, sans-serif;
             color: #333;
         }
+        body {
+    background-image: url('images.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
         .container {
             max-width: 600px;
             margin: 50px auto;

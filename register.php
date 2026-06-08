@@ -59,6 +59,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-family: Arial, sans-serif;
             color: #333;
         }
+         body {
+    background-image: url('images.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
         .back{
             background-color: #ecb7a7;
             color: #fff;

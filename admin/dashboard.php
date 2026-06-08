@@ -1,4 +1,5 @@
 <?php
+
    session_start();
    include '../configDb.php';
    if(!isset($_SESSION['user'])) {
@@ -185,6 +186,52 @@
     $audit = $pdo->query("SELECT a.*, u.nom, u.prenom FROM audit_log a
                           LEFT JOIN utilisateur u ON a.id_user = u.id_user
                           ORDER BY a.date_action DESC")->fetchAll(PDO::FETCH_ASSOC);
+
+
+$stmt = $pdo->prepare("
+    SELECT 
+        h.id_historique,
+        h.action,
+        h.commentaire,
+        h.date_action,
+        u.nom,
+        u.prenom,
+        t.titre
+    FROM historique_ticket h
+    LEFT JOIN utilisateur u ON h.id_user = u.id_user
+    LEFT JOIN ticket t ON h.id_ticket = t.id_ticket
+    ORDER BY h.date_action DESC
+");
+
+$stmt->execute();
+$historiques = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+if (isset($_POST['add_article'])) {
+
+    $titre = trim($_POST['titre']);
+    $contenu = trim($_POST['contenu']);
+    $mots_cles = trim($_POST['mots_cles']);
+
+    if (!empty($titre) && !empty($contenu)) {
+
+        $sql = "INSERT INTO article
+                (titre, contenu, mots_cles, date_creation)
+                VALUES (?, ?, ?, NOW())";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([
+            $titre,
+            $contenu,
+            $mots_cles
+        ]);
+
+        $_SESSION['toast'] = "Article ajouté avec succès";
+    }
+
+    header("Location: dashboard.php");
+    exit();
+}
 ?>
 
 
@@ -201,11 +248,13 @@
     <div class="sidebar">
         <h2>HELPDESK ADMIN</h2>
         <ul>
-            <li><a href="javascript:void(0)" onclick="showSection('dashboard')">Dashboard</a></li>
-            <li><a href="#" onclick="showSection('users')">Utilsateurs</a></li>
-            <li><a href="#" onclick="showSection('audit')">Audit</a></li>
-            <li><a href="#" onclick="showSection('param')">Parametres</a></li>
-            <li><a href="../logout.php">Deconnexion</a></li>
+            <li><a href="javascript:void(0)" onclick="showSection('dashboard')"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
+            <li><a href="#" onclick="showSection('users')"><i class="fa-solid fa-users"></i> Utilsateurs</a></li>
+            <li><a href="#" onclick="showSection('audit')"><i class="fa-solid fa-clipboard-list"></i>  Audit</a></li>
+            <li><a href="#" onclick="showSection('histo')"><i class="fa-solid fa-history"></i>  Historique</a></li>
+            <li><a href="#" onclick="showSection('baseC')"><i class="fa-solid fa-book"></i> Base Connaissance</a></li>
+            <li><a href="#" onclick="showSection('param')"><i class="fa-solid fa-gear"></i>  Parametres</a></li>
+            <li><a href="../logout.php"><i class="fa-solid fa-right-from-bracket"></i> Deconnexion</a></li>
         </ul>
     </div>
 
@@ -324,6 +373,54 @@
         </div>
     </div>
 
+    <div id="histo" class="section">
+    <div class="header">
+        <div class="head">
+            <p>Bienvenue Admin <?= htmlspecialchars($user['nom']) ?></p>
+        </div>
+
+        <div class="logo">
+            <img src="../logo.jpg" alt="Logo Helpdesk">
+        </div>
+    </div>
+
+    <h2>Historique du Système</h2>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Ticket</th>
+                <th>Utilisateur</th>
+                <th>Action</th>
+                <th>Commentaire</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <?php if(count($historiques) > 0): ?>
+                <?php foreach($historiques as $h): ?>
+                    <tr>
+                        <td><?= $h['id_historique'] ?></td>
+                        <td><?= htmlspecialchars($h['titre'] ?? 'Système') ?></td>
+                        <td>
+                            <?= htmlspecialchars($h['nom'].' '.$h['prenom']) ?>
+                        </td>
+                        <td><span class="badge"> <?= htmlspecialchars($h['action']) ?> </span></td>
+                        <td><?= htmlspecialchars($h['commentaire']) ?></td>
+                        <td><?= $h['date_action'] ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr>
+                    <td colspan="6">Aucun historique</td>
+                </tr>
+            <?php endif; ?>
+        </tbody>
+    </table>
+</div>   
+
      <div id="param" class="section">
         <div class="header">
                <div class="head">
@@ -346,7 +443,7 @@
             <?php foreach($statuts as $s): ?>
                 <li>
                     <?= htmlspecialchars($s['libelle']) ?>
-                    <a href="?supp_statut=<?= $s['id_statut'] ?>">❌</a>
+                    <a href="?supp_statut=<?= $s['id_statut'] ?>"><i class="fa-solid fa-trash"></i></a>
                 </li>
             <?php endforeach; ?>    
         </ul>
@@ -362,7 +459,7 @@
             <?php foreach($priorites as $p): ?>
                 <li>
                     <?= htmlspecialchars($p['libelle']) ?>
-                    <a href="?supp_priorite=<?= $p['id_priorite'] ?>">❌</a>
+                    <a href="?supp_priorite=<?= $p['id_priorite'] ?>"><i class="fa-solid fa-trash"></i></a>
                 </li>
             <?php endforeach; ?>    
         </ul>
@@ -378,7 +475,7 @@
             <?php foreach($modules as $m): ?>
                 <li>
                     <?= htmlspecialchars($m['nom']) ?>
-                    <a href="?supp_module=<?= $m['id_module'] ?>">❌</a>
+                    <a href="?supp_module=<?= $m['id_module'] ?>"><i class="fa-solid fa-trash"></i></a>
                 </li>
             <?php endforeach; ?>    
         </ul>
@@ -394,7 +491,7 @@
             <?php foreach($categories as $c): ?>
                 <li>
                     <?= htmlspecialchars($c['libelle']) ?>
-                    <a href="?supp_categorie=<?= $c['id_categorie'] ?>">❌</a>
+                    <a href="?supp_categorie=<?= $c['id_categorie'] ?>"><i class="fa-solid fa-trash"></i></a>
                 </li>
             <?php endforeach; ?>    
         </ul>
@@ -434,7 +531,49 @@
             </tbody>
         </table>
     </div>    
+<div id="baseC" class="section">
+      <?php if(isset($_SESSION['toast'])): ?>
+    <div class="success-msg">
+        <?= $_SESSION['toast']; ?>
+    </div>
+   <?php unset($_SESSION['toast']); endif; ?>
 
+    <div class="header">
+        <div class="head">
+            <p>Bienvenu ADMIN <?= htmlspecialchars($user['nom']) ?></p>
+        </div>
+        <div class="logo">
+            <img src="../logo.jpg" alt="Logo Helpdesk">
+        </div>
+    </div>
+
+    <h2>Ajouter un Article</h2>
+
+    <form method="POST" class="form-box">
+
+        <input type="text"
+               name="titre"
+               placeholder="Titre"
+               required> <br> <br>
+
+        <textarea name="mots_cles"
+                  placeholder="Mots clés : réseau, mot de passe..."
+                  required></textarea> <br> <br>       
+
+        <textarea name="contenu"
+                  placeholder="Contenu de l'article"
+                  required></textarea> <br> <br>
+
+        
+
+        <button type="submit" name="add_article" class="btn success">
+            Ajouter
+        </button>
+
+    </form>
+
+
+</div>
 
 
 

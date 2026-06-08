@@ -39,43 +39,42 @@ JOIN statut_ticket s ON t.id_statut = s.id_statut
 WHERE s.libelle = 'En attente'
 ")->fetchColumn();
 
+
+
+$params = [];
+
 $sql = "SELECT 
             t.id_ticket,
             t.titre,
             t.description,
             t.date_creation,
-
             u.nom,
             u.prenom,
-
             s.libelle AS statut,
-
             p.libelle AS priorite,
-
             c.libelle AS categorie,
-
             m.nom AS module
-
         FROM ticket t
-
-        LEFT JOIN utilisateur u 
-            ON t.id_user = u.id_user
-
-        LEFT JOIN statut_ticket s 
-            ON t.id_statut = s.id_statut
-
-        LEFT JOIN priorite p
-            ON t.id_priorite = p.id_priorite
-
-        LEFT JOIN categorie_ticket c
-            ON t.id_categorie = c.id_categorie
-
-        LEFT JOIN module_sifcom m
-            ON t.id_module = m.id_module
-
+        LEFT JOIN utilisateur u ON t.id_user = u.id_user
+        LEFT JOIN statut_ticket s ON t.id_statut = s.id_statut
+        LEFT JOIN priorite p ON t.id_priorite = p.id_priorite
+        LEFT JOIN categorie_ticket c ON t.id_categorie = c.id_categorie
+        LEFT JOIN module_sifcom m ON t.id_module = m.id_module
         WHERE 1=1";
 
-$params = [];
+
+if ($user['role'] === 'SUPPORT_N1') {
+
+    $sql .= " AND (t.id_support IS NULL OR t.id_support = ?)";
+    $params[] = $user['id_user'];
+
+} elseif ($user['role'] === 'SUPPORT_N2') {
+
+    $sql .= " AND t.id_support = ?";
+    $params[] = $user['id_user'];
+}
+
+
 
 if(!empty($_GET['statut'])){
     $sql .= " AND s.libelle = ?";
@@ -101,7 +100,7 @@ $offset = ($page - 1) * $limit;
 
 
 
-$sqlCount = "SELECT COUNT(*) FROM ticket";
+$sqlCount = "SELECT COUNT(*) FROM ticket t where 1=1";
 
 $totalTickets = $pdo->query($sqlCount)->fetchColumn();
 
@@ -116,6 +115,8 @@ $stmt->execute($params);
 
 $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+
+
 ?>
 
 
@@ -126,15 +127,30 @@ $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Support Dashboard</title>
      <link rel="stylesheet" href="../admin/admin.css">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 <body>
+    <?php if(isset($_SESSION['toast'])): ?>
+    <div class="toast">
+        <?= $_SESSION['toast']; ?>
+    </div>
+
+    <script>
+        setTimeout(() => {
+            document.querySelector('.toast').style.display = 'none';
+        }, 3000);
+    </script>
+
+    <?php unset($_SESSION['toast']); ?>
+<?php endif; ?>
+
     <div class="sidebar">
         <h2>HELPDESK SUPPORT</h2>
         <ul>
-            <li><a href="#" onclick="showSection('dashboard')">Dashboard</a></li>
-            <li><a href="#" onclick="showSection('tickets')">Mes Tickets</a></li>
-            <li><a href="#" onclick="showSection('stats')">Statistique</a></li>
-            <li><a href="../logout.php">Deconnexion</a></li>
+            <li><a href="#" onclick="showSection('dashboard')"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
+            <li><a href="#" onclick="showSection('tickets')"><i class="fa-solid fa-ticket"></i>  Mes Tickets</a></li>
+            <li><a href="#" onclick="showSection('stats')"> <i class="fa-solid fa-chart-line"></i> Statistique</a></li>
+            <li><a href="../logout.php"><i class="fa-solid fa-right-from-bracket"></i>  Deconnexion</a></li>
         </ul>
     </div>
 
@@ -277,16 +293,18 @@ $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <a href="detail.php?id=<?= $t['id_ticket'] ?>" class="btn view">
                         Detail
                     </a>
-                    <a href="changer_statut.php?id=<?= $t['id_ticket'] ?>&statut=Resolu" class="btn view">
+                    <a href="changer_statut.php?id=<?= $t['id_ticket'] ?>&statut=Resolu" class="btn success">
                         Resolu
                     </a>
 
-                    <a href="changer_statut.php?id=<?= $t['id_ticket'] ?>&statut=En attente" class="btn view">
+                    <a href="changer_statut.php?id=<?= $t['id_ticket'] ?>&statut=En attente" class="btn warning">
                        Attente
                     </a>
+                   <?php if ($user['role'] === 'SUPPORT_N1'): ?>
                     <a href="affecter_ticket.php?id=<?= $t['id_ticket'] ?>" class="btn view">
-                      Affecter
+                     Affecter
                     </a>
+<?php endif; ?>
                 </td>
 
             </tr>

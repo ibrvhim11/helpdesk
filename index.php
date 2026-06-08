@@ -13,6 +13,12 @@
                 font-family: Arial, sans-serif;
                 color: #333;
             }
+             body {
+    background-image: url('images.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;}
             .container {
                 max-width: 600px;
                 margin: 50px auto;

@@ -52,17 +52,18 @@ $taux = $nTickets > 0 ? round(($nResolu / $nTickets) * 100, 2) : 0;
     <title>Superviseur Dashboard</title>
     <link rel="stylesheet" href="../admin/admin.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
     <div class="sidebar">
         <h2>HELPDESK SUPERVISEUR</h2>
         <ul>
-            <li><a href="#" onclick="showSection('dashboard')">Dashboard</a></li>
-            <li><a href="#" onclick="showSection('tickets')">Tickets</a></li>
-            <li><a href="#" onclick="showSection('stats')">Statistique</a></li>
-            <li><a href="#" onclick="showSection('rapports')">Rapports</a></li>
-            <li><a href="../logout.php">Deconnexion</a></li>
+            <li><a href="#" onclick="showSection('dashboard')"><i class="fa-solid fa-gauge"></i> Dashboard</a></li>
+            <li><a href="#" onclick="showSection('tickets')"><i class="fa-solid fa-ticket"></i> Tickets</a></li>
+            <li><a href="#" onclick="showSection('stats')"> <i class="fa-solid fa-chart-line"></i>  Statistique</a></li>
+            <li><a href="#" onclick="showSection('rapports')"><i class="fa-solid fa-chart-pie"></i> Rapports</a></li>
+            <li><a href="../logout.php"><i class="fa-solid fa-right-from-bracket"></i> Deconnexion</a></li>
         </ul>
     </div>
 

@@ -19,20 +19,21 @@ if(!isset($_SESSION['user'])) {
 
    $date_debut = $_GET['date_debut'] ?? '';
     $date_fin = $_GET['date_fin'] ?? '';
-     $id_tickets = $_GET['id_tickets'] ?? '';
+     $id_ticket = $_GET['id_ticket'] ?? '';
 
-    $sql = "SELECT t.id_ticket, t.titre, t.date_creation, u.nom, u.prenom, s.libelle AS statut
-                          FROM ticket t 
-                          LEFT JOIN utilisateur u ON t.id_user = u.id_user
-                          LEFT JOIN statut_ticket s ON t.id_statut = s.id_statut
-                          WHERE 1=1";
+    $sql = "SELECT  t.id_ticket, t.titre, t.description, t.date_creation, u.nom,
+            u.prenom, s.libelle AS statut, c.libelle AS categorie, m.nom AS module
+            FROM ticket t  LEFT JOIN utilisateur u ON t.id_user = u.id_user
+            LEFT JOIN statut_ticket s  ON t.id_statut = s.id_statut 
+            LEFT JOIN categorie_ticket c ON t.id_categorie = c.id_categorie
+            LEFT JOIN module_sifcom m ON t.id_module = m.id_module WHERE 1=1";
 
         $params = [];
         
         
-    if(!empty($id_tickets)) {
+    if(!empty($id_ticket)) {
         $sql .= " AND t.id_ticket = ?";
-        $params[] = $id_tickets;
+        $params[] = $id_ticket;
     } 
     
     if(!empty($date_debut) && !empty($date_fin)) {
@@ -47,6 +48,11 @@ if(!isset($_SESSION['user'])) {
     $stmt->execute($params);
    
     $tickets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $logoPath = __DIR__ . '/../logo.jpg';
+    $logo = base64_encode(file_get_contents($logoPath));
+
+   $logoHtml = '<img src="data:image/jpeg;base64,' . $logo . '" width="90">';
 
 
     $html = '
@@ -69,16 +75,26 @@ if(!isset($_SESSION['user'])) {
          th, td{
           border: 1px solid #ddd;
           padding: 8px;
-          font-size: 12px
+          font-size: 12px;
          }
     </style>
+
+    <div style="text-align:center; margin-bottom:15px;">
+       '.$logoHtml.'
+    </div>
     
     <h1> Rapport HelpDesk </h1>
-
+        <div class="info">
+          <p><strong>Date :</strong> '.date('d/m/Y H:i').'</p>
+          <p><strong>Total tickets :</strong> '.count($tickets).'</p>
+        </div>
        <table>
             <tr>
                     <th>ID</th>
                     <th>Titre</th>
+                    <th>Description</th>
+                    <th>Module</th>
+                    <th>Catégorie</th>
                     <th>Utilisateur</th>
                     <th>Statut</th>
                     <th>Date</th>
@@ -90,6 +106,9 @@ if(!isset($_SESSION['user'])) {
           <tr>
                 <td>' .$t['id_ticket']. '</td>
                <td>' .htmlspecialchars($t['titre']). '</td>
+               <td>'.htmlspecialchars($t['description']).'</td>
+               <td>'.htmlspecialchars($t['module']).'</td>
+               <td>'.htmlspecialchars($t['categorie']).'</td>
                <td>' .htmlspecialchars($t['nom']. ' ' .$t['prenom']). '</td>
                <td>' .$t['statut']. '</td>
                 <td>' .$t['date_creation']. '</td>
